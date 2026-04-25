@@ -1,0 +1,106 @@
+import requests
+from bs4 import BeautifulSoup
+import os
+import json
+import time
+from pathlib import Path
+from urllib.parse import urljoin
+from typing import List, Dict, Optional
+
+class PenaKatolikSpider:
+    def __init__(self, output_dir: str = "data/raw/penakatolik"):
+        self.base_url = "https://penakatolik.com"
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+
+    def get_soup(self, url: str) -> Optional[BeautifulSoup]:
+        try:
+            response = requests.get(url, headers=self.headers, timeout=20)
+            response.raise_for_status()
+            return BeautifulSoup(response.text, 'html.parser')
+        except Exception as e:
+            print(f"[!] Error fetching {url}: {e}")
+            return None
+
+    def extract_article(self, article_url: str) -> Optional[Dict]:
+        soup = self.get_soup(article_url)
+        if not soup:
+            return None
+
+        title = soup.find('h1', class_='entry-title')
+        title = title.get_text(strip=True) if title else "No Title"
+        
+        content_div = soup.find('div', class_='entry-content')
+        if not content_div:
+            return None
+
+        return {
+            "title": title,
+            "url": article_url,
+            "content": content_div.get_text(separator="\n", strip=True),
+            "source": "penakatolik.com"
+        }
+
+    def crawl_category(self, category_url: str, max_pages: int = 5):
+        current_page = 1
+        output_file = self.output_dir.absolute() / "penakatolik_articles.jsonl"
+        print(f"[*] Saving to: {output_file}")
+
+        while current_page <= max_pages:
+            page_url = category_url if current_page == 1 else urljoin(category_url, f"page/{current_page}/")
+            print(f"[*] Crawling {page_url}")
+            
+            soup = self.get_soup(page_url)
+            if not soup:
+                break
+
+            articles = soup.find_all(['h2', 'h3'], class_='entry-title')
+            if not articles:
+                articles = soup.select('article h2 a')
+                if not articles:
+                    articles = soup.find_all('a', rel='bookmark')
+
+            if not articles:
+                break
+
+            found_on_page = 0
+            for art in articles:
+                link_tag = art if art.name == 'a' else art.find('a', href=True)
+                
+                if link_tag and link_tag.get('href'):
+                    art_url = link_tag['href']
+                    if "/category/" in art_url: continue
+                    
+                    print(f"  [+] Extracting: {art_url}")
+                    data = self.extract_article(art_url)
+                    if data:
+                        with open(output_file, 'a', encoding='utf-8') as f:
+                            f.write(json.dumps(data, ensure_ascii=False) + "\n")
+                            print(f"    [SAVED] {data['title']}")
+                        found_on_page += 1
+                    time.sleep(1)
+
+            if found_on_page == 0:
+                break
+
+            next_page = soup.find('a', class_='next')
+            if not next_page:
+                next_page = soup.select_one('.nav-links .next')
+                
+            if not next_page:
+                break
+            current_page += 1
+
+if __name__ == "__main__":
+    spider = PenaKatolikSpider()
+    # Focus on catechesis, faith knowledge and papal news
+    categories = [
+        "https://penakatolik.com/category/pengetahuan-iman/",
+        "https://penakatolik.com/category/doa-doa-katolik/",
+        "https://penakatolik.com/category/vatikan/"
+    ]
+    for cat in categories:
+        spider.crawl_category(cat, max_pages=10)
