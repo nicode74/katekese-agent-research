@@ -24,6 +24,7 @@ katekese-agent-research/
 ├── src/
 │   ├── crawler/      # Spider untuk KWI, Papal Encyclicals, Katolisitas, dll.
 │   ├── processors/   # Logic pembersihan, ekstraksi PDF, & konsolidasi
+│   └── indexer/      # Script untuk pembuatan Vector Store (FAISS)
 │   └── agents/       # [WIP] Implementasi RAG Agent
 ├── notebooks/        # Eksperimen data & analisis
 └── README.md
@@ -59,16 +60,22 @@ Setiap entri di folder `data/final/` memiliki struktur:
     source venv/Scripts/activate
     pip install -r requirements.txt
     ```
-2.  **Crawl Data:**
+2.  **Crawl & Process Data:**
     ```bash
     python src/crawler/kwi_spider.py
     python src/crawler/katolisitas_spider.py
-    ```
-3.  **Proses & Konsolidasi:**
-    ```bash
     python src/processors/pdf_processor.py
     python src/processors/consolidator.py
     ```
+3.  **Indexing (Vector Store):**
+    *   Tambahkan `GOOGLE_API_KEY` di file `.env`.
+    *   Jalankan indexing script:
+    ```bash
+    python src/indexer/index_data.py
+    ```
+
+> 📦 **Note on Large Files (Git LFS):**
+> Proyek ini menggunakan **Git LFS** untuk mengelola dataset di `data/final/`. Pastikan Anda telah menginstal Git LFS dan menjalankan `git lfs pull` untuk mengunduh seluruh dataset secara lengkap.
 
 ---
 *Proyek ini dikembangkan untuk mempermudah umat dan peneliti dalam mengakses ajaran resmi Gereja Katolik melalui bantuan AI.*

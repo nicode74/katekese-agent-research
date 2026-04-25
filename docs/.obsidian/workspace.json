@@ -11,10 +11,10 @@
             "id": "d9c04a483edace28",
             "type": "leaf",
             "state": {
-              "type": "empty",
+              "type": "graph",
               "state": {},
-              "icon": "lucide-file",
-              "title": "New tab"
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
             }
           }
         ]
@@ -90,6 +90,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "00 - Project Management/Project-Roadmap.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -99,7 +100,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks"
+              "title": "Backlinks for Project-Roadmap"
             }
           },
           {
@@ -108,11 +109,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "00 - Project Management/Project-Roadmap.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links"
+              "title": "Outgoing links from Project-Roadmap"
             }
           },
           {
@@ -150,12 +152,13 @@
             "state": {
               "type": "outline",
               "state": {
+                "file": "00 - Project Management/Project-Roadmap.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline"
+              "title": "Outline of Project-Roadmap"
             }
           }
         ]
@@ -177,5 +180,23 @@
     }
   },
   "active": "d9c04a483edace28",
-  "lastOpenFiles": []
+  "lastOpenFiles": [
+    "Home.md",
+    "00 - Project Management/Project-Roadmap.md",
+    "30 - Research & Experiments/Overview.md",
+    "90 - Templates/Source-Template.md",
+    "10 - Documentation/Development-Guide.md",
+    "10 - Documentation/RAG-System-Design.md",
+    "10 - Documentation/Data-Catalog.md",
+    "10 - Documentation/Architecture-Pipeline.md",
+    "90 - Templates",
+    "30 - Research & Experiments",
+    "20 - Data Sources",
+    "10 - Documentation",
+    "00 - Project Management",
+    "Development-Guide.md",
+    "RAG-System-Design.md",
+    "Data-Catalog.md",
+    "Architecture-Pipeline.md"
+  ]
 }

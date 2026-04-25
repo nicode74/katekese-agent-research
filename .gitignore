@@ -28,10 +28,10 @@ ENV/
 # Environment Variables
 .env
 
-# Data (Ignore raw and intermediate files, keep final if desired or ignore all)
+# Data
 data/raw/
 data/processed/
-# data/final/  # Uncomment if you want to keep final dataset out of Git
+# data/final/ is now managed by Git LFS for large files
 
 # IDEs
 .vscode/
