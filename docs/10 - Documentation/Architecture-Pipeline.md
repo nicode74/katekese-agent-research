@@ -1,45 +1,28 @@
-# 🏗️ Arsitektur & Pipeline Data
+# 🏗️ Arsitektur & Pipeline Detail
 
-Proyek ini menggunakan pendekatan **Extract, Transform, Load (ETL)** yang dimodifikasi untuk kebutuhan riset AI, ditambah tahap **Indexing** untuk mendukung RAG.
+Dokumen ini merinci langkah teknis yang diambil selama fase riset dan pembangunan data.
 
-## 🔄 Alur Data (Data Flow)
+## 🔄 Tahapan Transformasi Data (Detail)
 
-### 1. Extraction (Raw Layer)
-Data diambil dari berbagai sumber otoritatif menggunakan teknik yang berbeda:
-- **Web Crawling**: Menggunakan `BeautifulSoup` (Scrapy-style spiders) untuk situs seperti *Katolisitas.org*, *Mirifica.net*, dan *PapalEncyclicals.net*.
-- **Local Files**: Mengolah file mentah seperti `alkitab-tb.json`.
-- **PDF Extraction**: Menggunakan `pdfplumber` untuk mengekstrak teks dari Seri Dokumen Gerejawi KWI.
+### 1. Ekstraksi (Crawling & Scraped)
+- **Spiders WordPress**: Kami membangun crawler khusus (WP-Theme detection) untuk *Katolisitas* dan *Mirifica*. Kami menargetkan tag `h3.entry-title` dan kontainer `div.td-post-content`.
+- **Papal Archive**: Melakukan ekstraksi terhadap 1,407 dokumen dari *PapalEncyclicals.net* dengan filter otomatis untuk membuang link eksternal (vatican.va).
+- **Excel Converter**: Mengonversi dataset Deuterokanonika dari `.xlsx` ke `.jsonl` untuk menjaga konsistensi schema.
 
-### 2. Processing (Processed Layer)
-Langkah ini fokus pada pembersihan dan standarisasi awal:
-- **Cleaning**: Menghapus noise navigasi web, iklan, dan format PDF yang rusak.
-- **Normalizing**: Konversi encoding karakter yang aneh menjadi UTF-8 bersih.
-- **Title Intelligence**: Menghasilkan judul deskriptif secara otomatis untuk ayat Alkitab, nomor kanon, dan halaman PDF.
+### 2. Intelejensi PDF (PDF-to-Text)
+- Menggunakan library `pdfplumber` untuk menangani PDF berbasis teks.
+- **Titling Logic**: Kami mengimplementasikan algoritma untuk membaca baris pertama pada halaman pertama setiap PDF sebagai "Global Title". Jika baris pertama tidak valid, sistem melakukan *fallback* ke pembersihan nama file (Snake-to-Title case).
+- **Chunking Strategy**: PDF dipecah per-halaman untuk menjaga referensi halaman tetap akurat dalam sitasi.
 
-### 3. Consolidation (Final Layer)
-Menyatukan semua data ke dalam **Unified Schema** di folder `data/final/` dalam format `.jsonl`.
+### 3. Pembersihan & Normalisasi (Refinement)
+- **Encoding Fix**: Menggunakan regex untuk mengganti artifak encoding (Latin-1 vs UTF-8) yang sering muncul di data Gereja lama. Contoh: `â€œ` -> `"`.
+- **Schema Unification**: Seluruh sumber (20+ file) disatukan menggunakan `src/processors/consolidator.py` ke dalam skema seragam:
+  - `title`, `content`, `url`, `source`, `language`, `metadata`.
 
-### 4. Indexing (Vector Layer)
-Tahap akhir untuk membuat data dapat dicari secara semantik oleh AI:
-- **Local Multilingual Embeddings**: Menggunakan model `paraphrase-multilingual-MiniLM-L12-v2` dari HuggingFace (Gratis & No Rate Limit).
-- **Vector Store**: Menggunakan **FAISS** untuk penyimpanan index lokal yang efisien.
-- **Project Knowledge**: Menggabungkan file `.md` dari Obsidian vault sebagai konteks tambahan.
+### 4. Indexing (Local Vectorization)
+- **Problem**: Gemini API Embedding memiliki limit (quota exhausted) untuk 35,000+ baris data.
+- **Solusi**: Migrasi ke **Local Embeddings** menggunakan `sentence-transformers` dengan model `paraphrase-multilingual-MiniLM-L12-v2`.
+- **Hasil**: Proses vectorization selesai dalam 55 menit tanpa biaya API dan tanpa limitasi kuota.
 
-## 📋 Unified Schema (Format Final)
-```json
-{
-  "title": "Judul spesifik",
-  "content": "Isi teks bersih",
-  "url": "Link sumber",
-  "source": "Label sumber",
-  "language": "id / en",
-  "metadata": { ... }
-}
-```
-
-## 🛠️ Tooling & Stack
-- **Python 3.14+**: Core language.
-- **LangChain & FAISS**: RAG & Vector database.
-- **HuggingFace**: Embedding models.
-- **pdfplumber**: Ekstraksi PDF.
-- **Obsidian**: Knowledge Base & Documentation.
+## 📊 Integrasi Obsidian
+Indexer (`index_data.py`) menggunakan `docs_dir.rglob("*.md")` untuk memindai seluruh vault ini. Artinya, catatan riset ini juga menjadi bagian dari pengetahuan yang bisa dicari oleh AI Agent.
