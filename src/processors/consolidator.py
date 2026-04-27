@@ -181,8 +181,9 @@ if __name__ == "__main__":
     con.process_file(Path("data/raw/kwi/kwi_articles.jsonl"), "kwi")
     con.process_file(Path("data/raw/mirifica/mirifica_articles.jsonl"), "mirifica")
     
-    # 4. Katolisitas
+    # 4. Katolisitas & EKatolik
     con.process_file(Path("data/raw/katolisitas/katolisitas_articles.jsonl"), "katolisitas")
+    con.process_file(Path("data/raw/ekatolik/ekatolik_prayers.jsonl"), "ekatolik")
     
     # 5. Papal (English)
     con.process_file(Path("data/raw/papal_encyclicals/papal_docs.jsonl"), "papal_encyclicals", lang="en")

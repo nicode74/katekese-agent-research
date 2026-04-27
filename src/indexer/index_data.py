@@ -17,6 +17,9 @@ class KatekeseIndexer:
         self.index_dir = Path(index_dir)
         self.index_dir.mkdir(parents=True, exist_ok=True)
         
+        self.manifest_path = self.index_dir / "indexed_files.txt"
+        self.index_path = self.index_dir / "katekese_faiss_local"
+        
         # Initialize Local Multilingual Embeddings
         print("[*] Initializing Local Multilingual Embeddings (HuggingFace)...")
         self.embeddings = HuggingFaceEmbeddings(
@@ -29,119 +32,109 @@ class KatekeseIndexer:
             separators=["\n\n", "\n", " ", ""]
         )
 
-    def load_jsonl_documents(self, limit_per_file: int = None) -> List[Document]:
-        """Load .jsonl files from data/final/."""
-        documents = []
-        jsonl_files = list(self.data_dir.glob("*.jsonl"))
-        
-        print(f"[*] Loading data from {len(jsonl_files)} JSONL files...")
-        for file_path in jsonl_files:
-            count = 0
-            with open(file_path, 'r', encoding='utf-8') as f:
-                for line in f:
-                    try:
-                        data = json.loads(line)
-                        doc = Document(
-                            page_content=data['content'],
-                            metadata={
-                                "title": data['title'],
-                                "source": data['source'],
-                                "url": data['url'],
-                                "language": data['language'],
-                                **data.get('metadata', {})
-                            }
-                        )
-                        chunks = self.text_splitter.split_documents([doc])
-                        documents.extend(chunks)
-                        count += 1
-                        if limit_per_file and count >= limit_per_file:
-                            break
-                    except: continue
-            print(f"    Loaded {count} entries from {file_path.name}")
-        return documents
+    def get_indexed_files(self) -> set:
+        if self.manifest_path.exists():
+            return set(self.manifest_path.read_text().splitlines())
+        return set()
 
-    def load_markdown_documents(self) -> List[Document]:
-        """Load .md files from Obsidian vault (docs/)."""
+    def save_indexed_files(self, indexed_files: set):
+        self.manifest_path.write_text("\n".join(sorted(list(indexed_files))))
+
+    def load_jsonl_file(self, file_path: Path, limit: int = None) -> List[Document]:
         documents = []
-        md_files = list(self.docs_dir.rglob("*.md"))
-        
-        print(f"[*] Loading data from {len(md_files)} Markdown files (Obsidian)...")
-        for file_path in md_files:
-            # Skip obsidian config
-            if ".obsidian" in str(file_path):
-                continue
-                
-            try:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
+        count = 0
+        with open(file_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                try:
+                    data = json.loads(line)
                     doc = Document(
-                        page_content=content,
+                        page_content=data['content'],
                         metadata={
-                            "title": file_path.stem,
-                            "source": "Obsidian Vault",
-                            "file_path": str(file_path),
-                            "language": "id"
+                            "title": data['title'],
+                            "source": data['source'],
+                            "url": data['url'],
+                            "language": data['language'],
+                            **data.get('metadata', {})
                         }
                     )
                     chunks = self.text_splitter.split_documents([doc])
                     documents.extend(chunks)
-                    print(f"    Loaded {file_path.name}")
-            except Exception as e:
-                print(f"    [!] Error loading {file_path.name}: {e}")
+                    count += 1
+                    if limit and count >= limit: break
+                except: continue
+        print(f"    Loaded {count} entries from {file_path.name} -> {len(documents)} chunks.")
         return documents
 
-    def create_index(self, batch_size: int = 1000, test_mode: bool = False):
-        """Create FAISS index combining data and documentation."""
-        limit = 100 if test_mode else None
+    def update_index(self, batch_size: int = 1000):
+        """Only index NEW files found in data/final and docs/."""
+        indexed_files = self.get_indexed_files()
         
-        all_docs = self.load_jsonl_documents(limit_per_file=limit)
-        all_docs.extend(self.load_markdown_documents())
+        # 1. Check for new JSONL files
+        jsonl_files = list(self.data_dir.glob("*.jsonl"))
+        new_jsonl = [f for f in jsonl_files if f.name not in indexed_files]
         
-        print(f"[*] Creating index for {len(all_docs)} total chunks...")
-        start_time = time.time()
+        # 2. Check for new Markdown files
+        md_files = [f for f in self.docs_dir.rglob("*.md") if ".obsidian" not in str(f)]
+        new_md = [f for f in md_files if str(f) not in indexed_files]
         
-        vector_store = None
-        for i in range(0, len(all_docs), batch_size):
-            batch = all_docs[i:i + batch_size]
-            print(f"  [>] Indexing batch {i//batch_size + 1}/{(len(all_docs)-1)//batch_size + 1}...")
-            
-            if vector_store is None:
-                vector_store = FAISS.from_documents(batch, self.embeddings)
-            else:
-                vector_store.add_documents(batch)
-            
-        if vector_store:
-            save_path = self.index_dir / "katekese_faiss_local"
-            vector_store.save_local(str(save_path))
-            print(f"[*] Index saved successfully to {save_path}")
-            print(f"[*] Total indexing time: {time.time() - start_time:.2f} seconds")
-
-    def query_test(self, query: str, k: int = 3):
-        """Test the local index."""
-        save_path = self.index_dir / "katekese_faiss_local"
-        if not (save_path).exists():
-            print("[!] Index not found.")
+        if not new_jsonl and not new_md:
+            print("[*] No new files to index.")
             return
 
-        vector_store = FAISS.load_local(
-            str(save_path), 
-            self.embeddings,
-            allow_dangerous_deserialization=True
-        )
+        print(f"[*] Found {len(new_jsonl)} new JSONL files and {len(new_md)} new MD files.")
         
+        # Load all new documents
+        all_new_docs = []
+        for f in new_jsonl:
+            all_new_docs.extend(self.load_jsonl_file(f))
+            indexed_files.add(f.name)
+            
+        for f in new_md:
+            try:
+                content = f.read_text(encoding='utf-8')
+                doc = Document(
+                    page_content=content,
+                    metadata={"title": f.stem, "source": "Obsidian Vault", "file_path": str(f)}
+                )
+                all_new_docs.extend(self.text_splitter.split_documents([doc]))
+                indexed_files.add(str(f))
+                print(f"    Loaded MD: {f.name}")
+            except: pass
+
+        if not all_new_docs:
+            return
+
+        print(f"[*] Indexing {len(all_new_docs)} new chunks...")
+        
+        # Load existing index or create new
+        if self.index_path.exists():
+            vector_store = FAISS.load_local(str(self.index_path), self.embeddings, allow_dangerous_deserialization=True)
+            # Add in batches
+            for i in range(0, len(all_new_docs), batch_size):
+                batch = all_new_docs[i:i + batch_size]
+                vector_store.add_documents(batch)
+                print(f"  [>] Added batch {i//batch_size + 1}")
+        else:
+            # Create fresh
+            vector_store = FAISS.from_documents(all_new_docs[:batch_size], self.embeddings)
+            for i in range(batch_size, len(all_new_docs), batch_size):
+                batch = all_new_docs[i:i + batch_size]
+                vector_store.add_documents(batch)
+                print(f"  [>] Indexed batch {i//batch_size + 1}")
+
+        vector_store.save_local(str(self.index_path))
+        self.save_indexed_files(indexed_files)
+        print(f"[*] Incremental update complete. Index saved.")
+
+    def query_test(self, query: str, k: int = 3):
+        if not self.index_path.exists(): return
+        vector_store = FAISS.load_local(str(self.index_path), self.embeddings, allow_dangerous_deserialization=True)
         results = vector_store.similarity_search(query, k=k)
-        print(f"\n[LOCAL QUERY TEST] Results for: '{query}'")
+        print(f"\n[QUERY TEST] '{query}'")
         for i, res in enumerate(results):
-            print(f"\n--- Result {i+1} ---")
-            print(f"Title: {res.metadata.get('title')}")
-            print(f"Source: {res.metadata.get('source')}")
-            print(f"Snippet: {res.page_content[:200]}...")
+            print(f"[{i+1}] {res.metadata.get('title')} ({res.metadata.get('source')}): {res.page_content[:150]}...")
 
 if __name__ == "__main__":
     indexer = KatekeseIndexer()
-    
-    # Run production indexing (Data + Docs)
-    indexer.create_index(test_mode=False)
-    
-    # Test query about project itself
-    indexer.query_test("Apa saja kategori data dalam proyek ini?")
+    indexer.update_index()
+    indexer.query_test("Apa saja kategori data?")
