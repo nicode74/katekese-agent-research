@@ -17,17 +17,20 @@ Dokumen ini mencatat milestone teknis yang telah dicapai dalam pengembangan sist
 
 ### ✅ Phase 3: Indexing & Vector Store
 - [x] **Local Embeddings:** Implementasi HuggingFace `paraphrase-multilingual-MiniLM-L12-v2` (Bypass rate limit & zero cost).
-- [x] **Vector DB:** Pembuatan index FAISS lokal dengan **125,432 chunks**.
-- [x] **Obsidian Integration:** Indexer secara otomatis menyerap file `.md` di folder `docs/` sebagai konteks tambahan.
+- [x] **Vector DB:** Pembuatan index FAISS lokal yang mendukung pencarian semantik multibahasa.
+- [x] **Obsidian Awareness:** Indexer secara otomatis menyerap file `.md` di folder `docs/` sebagai konteks tambahan, memungkinkan Agent "sadar" akan catatan riset sendiri.
+- [x] **Incremental Indexing:** Script `index_data.py` hanya memproses file baru atau yang berubah.
 
-### ✅ Phase 4: Agent Orchestration (Current)
-- [x] **RAG Agent:** Pengembangan `src/agents/katekese_agent.py`.
-- [x] **Citation Logic:** Sistem sitasi otomatis `[1]`, `[2]` untuk keaslian data teologis.
-- [x] **LLM Reasoner:** Integrasi Gemini 2.0 Flash sebagai otak penalaran.
+### 🏗️ Phase 4: Agent Orchestration (WIP)
+- [x] **RAG Agent:** Pengembangan `src/agents/katekese_agent.py` menggunakan LangChain.
+- [x] **Citation Logic:** Sistem sitasi otomatis `[1]`, `[2]` untuk menjamin akurasi rujukan teologis.
+- [x] **LLM Reasoner:** Integrasi **Gemini 2.0 Flash** untuk performa cepat dan jendela konteks luas.
+- [ ] **Hybrid Search:** Menggabungkan BM25 (keyword) dan Vector Search (semantic) untuk presisi rujukan ayat/kanon.
+- [ ] **Evaluation:** Implementasi framework evaluasi (seperti RAGAS) untuk mengukur *faithfulness* dan *relevancy*.
 
 ---
 
-## 🛠️ Pekerjaan Mendatang (Next Steps)
-1. [ ] **API Layer:** Membungkus agent ke dalam FastAPI untuk integrasi website.
-2. [ ] **UI Integration:** Membuat panel referensi/sumber pada frontend website gereja.
-3. [ ] **Advanced Filtering:** Filter pencarian berdasarkan kategori (misal: "Cari hanya di Hukum Kanonik").
+## 🛠️ Pekerjaan Mendatang (Short-term)
+1. [ ] **Hybrid Search Implementation:** Penting untuk pencarian spesifik nomor ayat/kanon.
+2. [ ] **Prompt Tuning:** Optimalisasi instruksi agar Agent lebih "rendah hati" jika tidak menemukan jawaban di data.
+3. [ ] **UI Integration:** Membuat bot sederhana (Telegram/CLI) untuk pengujian oleh tim internal.

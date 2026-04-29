@@ -1,23 +1,23 @@
 # 🚀 Project Roadmap
 
-## Phase 1: Data Foundations (Current)
+## Phase 1: Data Foundations (Complete)
 - [x] Setup Project Structure
 - [x] Crawl primary sources (Alkitab, KHK, KKGK)
 - [x] PDF Extraction for KWI Documents
 - [x] Unified Data Schema
 - [ ] Data Quality Audit (Spot check content)
 
-## Phase 2: RAG Infrastructure
-- [ ] Selection of Vector Database (Chroma/Qdrant)
-- [ ] Implementation of Indexing Script
-- [ ] Embedding Model Benchmarking (IndoBERT vs E5 vs Gemini)
-- [ ] Basic Retrieval Test (Semantic Search)
+## Phase 2: RAG Infrastructure (Advanced)
+- [x] Selection of Vector Database (FAISS - Local)
+- [x] Implementation of Indexing Script (`index_data.py`)
+- [ ] Embedding Model Benchmarking (MiniLM vs Gemini Embedding)
+- [x] Basic Retrieval Test (Semantic Search)
 
-## Phase 3: Agentic Logic
-- [ ] Prompt Engineering for Theological Accuracy
-- [ ] Implementation of Citation System (Source Attribution)
+## Phase 3: Agentic Logic (WIP)
+- [x] Prompt Engineering for Theological Accuracy
+- [x] Implementation of Citation System (Source Attribution)
 - [ ] Hybrid Search (Keyword + Semantic)
-- [ ] Hallucination Guardrails
+- [ ] Evaluation Framework (RAGAS or similar)
 
 ## Phase 4: Integration & UI
 - [ ] Obsidian Plugin Integration (Ask AI within vault)
