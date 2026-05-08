@@ -24,10 +24,12 @@ Pendekatan hybrid dipilih untuk mengevaluasi dan menyeimbangkan *trade-off* anta
 
 ## 3. How: Bagaimana Implementasinya?
 
-- **Routing:** Aplikasi dibangun menggunakan kerangka kerja `LangChain` dan `LangGraph`. Terdapat parameter konfigurasi (melalui file `.env`) di mana administrator dapat memilih mode operasi LLM: `local` atau `cloud`.
-- **Eksekusi Llama 3:** Dijalankan secara lokal menggunakan **Ollama** atau **vLLM** sebagai backend untuk memberikan titik akhir (endpoint) yang kompatibel dengan API OpenAI lokal, atau dijalankan via `HuggingFacePipeline`.
-- **Eksekusi Gemini API:** Diintegrasikan menggunakan `langchain-google-genai` dengan model `gemini-1.5-pro` atau `gemini-1.5-flash`.
-- **Evaluasi Perbandingan:** Kedua model ini akan dievaluasi secara terpisah (A/B testing) pada *dataset* pertanyaan evaluasi yang sama, untuk menentukan seberapa signifikan perbedaan akurasinya.
+- **Arsitektur Forking:** Aplikasi dibangun menggunakan kerangka kerja `LangChain`. Untuk menjamin integritas eksperimen (A/B testing) dan memastikan *dependency* yang terisolasi, agen RAG dipisahkan menjadi 4 *script* independen:
+  - `agent_gemini.py`: Menggunakan `ChatGoogleGenerativeAI` (Gemini 2.0 Flash) untuk performa tingkat atas via Cloud.
+  - `agent_groq.py`: Menggunakan `ChatGroq` sebagai *proxy* cloud untuk inferensi Llama 3 8B yang berkecepatan tinggi tanpa beban lokal.
+  - `agent_local_llama.py`: Menggunakan `ChatOllama` untuk Llama 3 8B secara *offline*, merepresentasikan *heavy local execution*.
+  - `agent_local_qwen.py`: Menggunakan `ChatOllama` untuk Qwen (misal: Qwen 2.5 0.5b) sebagai perwakilan model *lightweight/low-resource*.
+- **Evaluasi Otomatis:** Kami mengimplementasikan sebuah *pipeline* evaluasi (`evaluate_agents.py`) yang mengeksekusi semua agen tersebut secara berurutan menggunakan daftar pertanyaan teologis standar. *Script* ini otomatis mencatat waktu respons (latensi) dan jawaban yang dihasilkan, lalu mengompilasinya ke dalam laporan komparasi berbentuk tabel Markdown (`A_B_Test_Results.md`).
 
 ---
 *Dokumen ini dapat dilampirkan sebagai metodologi di dalam paper penelitian.*

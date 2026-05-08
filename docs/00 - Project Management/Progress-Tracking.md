@@ -22,11 +22,12 @@ Dokumen ini mencatat milestone teknis yang telah dicapai dalam pengembangan sist
 - [x] **Incremental Indexing:** Script `index_data.py` hanya memproses file baru atau yang berubah.
 
 ### 🏗️ Phase 4: Agent Orchestration (WIP)
-- [x] **RAG Agent:** Pengembangan `src/agents/katekese_agent.py` menggunakan LangChain.
+- [x] **Multi-Provider Architecture:** Pemisahan *Agent* menjadi 4 skrip independen (`agent_gemini.py`, `agent_groq.py`, `agent_local_llama.py`, `agent_local_qwen.py`) untuk A/B testing yang bersih.
 - [x] **Citation Logic:** Sistem sitasi otomatis `[1]`, `[2]` untuk menjamin akurasi rujukan teologis.
-- [x] **LLM Reasoner:** Integrasi **Gemini 2.0 Flash** untuk performa cepat dan jendela konteks luas.
+- [x] **LLM Reasoner:** Integrasi LangChain untuk **Gemini 2.0 Flash**, **Groq (Llama 3)**, dan **Ollama (Llama 3 & Qwen)**.
+- [x] **Automated Evaluation:** Pembuatan skrip `evaluate_agents.py` untuk mengukur latensi dan membandingkan *output* antar model secara otomatis ke dalam format Markdown.
 - [ ] **Hybrid Search:** Menggabungkan BM25 (keyword) dan Vector Search (semantic) untuk presisi rujukan ayat/kanon.
-- [ ] **Evaluation:** Implementasi framework evaluasi (seperti RAGAS) untuk mengukur *faithfulness* dan *relevancy*.
+- [ ] **Deep Evaluation:** Implementasi framework RAGAS untuk mengukur metrik *faithfulness* dan *relevancy* secara komprehensif.
 
 ---
 

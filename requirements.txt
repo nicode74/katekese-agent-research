@@ -14,3 +14,5 @@ nbformat
 ragas
 datasets
 pytest
+langchain-ollama
+langchain-groq

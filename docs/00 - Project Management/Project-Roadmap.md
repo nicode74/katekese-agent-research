@@ -16,8 +16,10 @@
 ## Phase 3: Agentic Logic (WIP)
 - [x] Prompt Engineering for Theological Accuracy
 - [x] Implementation of Citation System (Source Attribution)
+- [x] Multi-Provider Agent Architecture (Forks for Gemini, Groq, Ollama)
+- [x] Automated A/B Testing Pipeline
 - [ ] Hybrid Search (Keyword + Semantic)
-- [ ] Evaluation Framework (RAGAS or similar)
+- [ ] Advanced Evaluation Framework (RAGAS)
 
 ## Phase 4: Integration & UI
 - [ ] Obsidian Plugin Integration (Ask AI within vault)
