@@ -21,4 +21,13 @@ Laporkan perubahan strategi yang kita lakukan:
 - Kita sudah memiliki **35.000+ baris data**. Apakah dosen menyarankan sumber tambahan lain? (Misalnya: Dokumen Sinode lokal atau Buku Doa tertentu).
 
 ---
+## ✅ 5. Update Feedback Dosen (Mei 2026)
+Poin-poin berikut telah diimplementasikan dalam struktur riset:
+- **EDA (Exploratory Data Analysis):** Notebook `01_EDA.ipynb` telah dibuat untuk menganalisis distribusi teks dan chunk data.
+- **Evaluasi Model (With & Without RAG):** Menggunakan framework **RAGAS** untuk mengukur *Faithfulness* dan *Relevance* pada model Llama 3 dan Gemini.
+- **Unit Testing:** Implementasi *whitebox* (retriever/chunker) dan *blackbox* (API testing) di folder `test/`.
+- **Pemilihan LLM:** Dokumentasi strategi **Hybrid LLM** (Llama 3 Local & Gemini Cloud) telah disusun untuk membandingkan performa.
+- **Bias & Etika:** Kerangka pengujian bias dan *theological alignment* telah disiapkan.
+
+---
 *Catatan: Segera perbarui dokumen ini setelah mendapatkan feedback dari pembimbing.*

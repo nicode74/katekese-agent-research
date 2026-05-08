@@ -185,10 +185,17 @@ if __name__ == "__main__":
     con.process_file(Path("data/raw/katolisitas/katolisitas_articles.jsonl"), "katolisitas")
     con.process_file(Path("data/raw/ekatolik/ekatolik_prayers.jsonl"), "ekatolik")
     
-    # 5. Papal (English)
+    # 5. New Sources
+    con.process_file(Path("data/processed/hidup/hidup_kekatolikan_clean.jsonl"), "hidup_kekatolikan")
+    con.process_file(Path("data/processed/hidup/hidup_katekese_clean.jsonl"), "hidup_katekese")
+    con.process_file(Path("data/processed/komkat/komkat_artikel_clean.jsonl"), "komkat")
+    con.process_file(Path("data/processed/lbi/lbi_berita-artikel_clean.jsonl"), "lbi_berita-artikel")
+    con.process_file(Path("data/processed/lbi/lbi_inspirasi-pagi_clean.jsonl"), "lbi_inspirasi-pagi")
+
+    # 6. Papal (English)
     con.process_file(Path("data/raw/papal_encyclicals/papal_docs.jsonl"), "papal_encyclicals", lang="en")
     
-    # 6. Processed PDFs
+    # 7. Processed PDFs
     kwi_pdf_dir = Path("data/processed/kwi/pdfs")
     if kwi_pdf_dir.exists():
         for pdf_jsonl in kwi_pdf_dir.glob("*.jsonl"):

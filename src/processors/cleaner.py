@@ -44,6 +44,26 @@ class DataCleaner:
                 r"This\s+entry\s+was\s+posted\s+in.*?\.",
                 r"Select\s+Pope.*?List\s+all\s+available",
                 r"Kindle,\s+Nook,\s+EPUB",
+            ],
+            "hidup": [
+                r"Baca\s+Juga:.*?\n",
+                r"Silakan\s+baca\s+selengkapnya.*?\n",
+                r"Dapatkan\s+informasi\s+terupdate.*?\n",
+                r"Klik\s+di\s+sini.*?\n",
+                r"Sumber:.*?\n",
+            ],
+            "komkat": [
+                r"SEKRETARIAT\s+KOMISI\s+KATEKETIK\s+KWI.*?\n",
+                r"Jl\.\s+Cut\s+Meutia.*?\n",
+                r"Telephone:.*?Fax:.*?\n",
+                r"Copyright.*?Konfrensi\s+Wali\s+Gereja\s+Indonesia",
+                r"Baca\s+Selengkapnya\.\.\.",
+            ],
+            "lbi": [
+                r"Lembaga\s+Biblika\s+Indonesia\s+\(LBI\).*?\n",
+                r"Contact\s+us:.*?\n",
+                r"&copy;.*?LBI\.or\.id",
+                r"Theme:\s+Newspaper\s+by\s+tagDiv\.com",
             ]
         }
 
@@ -71,6 +91,7 @@ class DataCleaner:
         return text.strip()
 
     def process_file(self, input_path: str, output_path: str, source_type: str):
+        if not os.path.exists(input_path): return
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         count = 0
         with open(input_path, 'r', encoding='utf-8') as fin, \
@@ -92,9 +113,13 @@ if __name__ == "__main__":
     tasks = [
         ('data/raw/kwi/kwi_articles.jsonl', 'data/processed/kwi/kwi_articles_clean.jsonl', 'kwi'),
         ('data/raw/papal_encyclicals/papal_docs.jsonl', 'data/processed/papal/papal_docs_clean.jsonl', 'papal'),
-        ('data/raw/mirifica/mirifica_articles.jsonl', 'data/processed/mirifica/mirifica_articles_clean.jsonl', 'kwi'), # Mirifica is similar to KWI structure
+        ('data/raw/mirifica/mirifica_articles.jsonl', 'data/processed/mirifica/mirifica_articles_clean.jsonl', 'kwi'),
+        ('data/raw/hidup/hidup_kekatolikan.jsonl', 'data/processed/hidup/hidup_kekatolikan_clean.jsonl', 'hidup'),
+        ('data/raw/hidup/hidup_katekese.jsonl', 'data/processed/hidup/hidup_katekese_clean.jsonl', 'hidup'),
+        ('data/raw/komkat/komkat_artikel.jsonl', 'data/processed/komkat/komkat_artikel_clean.jsonl', 'komkat'),
+        ('data/raw/lbi/lbi_berita-artikel.jsonl', 'data/processed/lbi/lbi_berita-artikel_clean.jsonl', 'lbi'),
+        ('data/raw/lbi/lbi_inspirasi-pagi.jsonl', 'data/processed/lbi/lbi_inspirasi-pagi_clean.jsonl', 'lbi'),
     ]
     
     for inp, out, t in tasks:
-        if os.path.exists(inp):
-            cleaner.process_file(inp, out, t)
+        cleaner.process_file(inp, out, t)

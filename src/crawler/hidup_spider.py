@@ -8,9 +8,9 @@ from pathlib import Path
 from urllib.parse import urljoin
 from typing import List, Dict, Optional
 
-class KatolisitasSpider:
-    def __init__(self, output_dir: str = "data/raw/katolisitas"):
-        self.base_url = "https://www.katolisitas.org"
+class HidupSpider:
+    def __init__(self, output_dir: str = "data/raw/hidup"):
+        self.base_url = "https://www.hidupkatolik.com"
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.headers = {
@@ -31,13 +31,21 @@ class KatolisitasSpider:
         if not soup:
             return None
 
-        title = soup.find('h1', class_='entry-title')
+        title = soup.find('h1', class_='jeg_post_title')
+        if not title:
+            title = soup.find('h1', class_='entry-title')
+        if not title:
+            title = soup.select_one('.tdb-title-text')
+            
         title = title.get_text(strip=True) if title else "No Title"
         
         # Newspaper theme content selector
         content_div = soup.find('div', class_='td-post-content')
         if not content_div:
-            # Fallback for older posts
+            content_div = soup.select_one('.tdb-block-inner.tdb-single-content')
+        if not content_div:
+            content_div = soup.find('div', class_='jeg_post_content')
+        if not content_div:
             content_div = soup.find('div', class_='entry-content')
             
         if not content_div:
@@ -47,12 +55,14 @@ class KatolisitasSpider:
             "title": title,
             "url": article_url,
             "content": content_div.get_text(separator="\n", strip=True),
-            "source": "katolisitas.org"
+            "source": "hidupkatolik.com"
         }
 
     def crawl_category(self, category_url: str, max_pages: int = 5):
         current_page = 1
-        output_file = self.output_dir / "katolisitas_articles.jsonl"
+        # Use category name in filename
+        cat_name = category_url.strip('/').split('/')[-1]
+        output_file = self.output_dir / f"hidup_{cat_name}.jsonl"
 
         while current_page <= max_pages:
             page_url = category_url if current_page == 1 else urljoin(category_url, f"page/{current_page}/")
@@ -62,50 +72,51 @@ class KatolisitasSpider:
             if not soup:
                 break
 
-            # Katolisitas (Newspaper theme) uses h3 for modules in archives
-            articles = soup.find_all('h3', class_='entry-title')
+            # Newspaper theme selectors
+            articles = soup.select('.td-module-title a')
             if not articles:
-                articles = soup.find_all(['h1', 'h2', 'h3'], class_=re.compile(r'title|entry'))
+                articles = soup.select('.jeg_post_title a')
             
             if not articles:
                 print("    [-] No articles found on this page.")
                 break
 
             found_on_page = 0
-            for art in articles:
-                link_tag = art.find('a', href=True)
-                if link_tag:
-                    art_url = link_tag['href']
-                    # Skip if it's just a category link or main page
-                    if "/category/" in art_url: continue
-                    
-                    print(f"  [+] Extracting: {art_url}")
-                    data = self.extract_article(art_url)
-                    if data:
-                        with open(output_file, 'a', encoding='utf-8') as f:
-                            f.write(json.dumps(data, ensure_ascii=False) + "\n")
-                        found_on_page += 1
-                    time.sleep(1)
+            seen_urls = set()
+            for link_tag in articles:
+                art_url = link_tag.get('href')
+                if not art_url or art_url in seen_urls or "/category/" in art_url:
+                    continue
+                
+                seen_urls.add(art_url)
+                print(f"  [+] Extracting: {art_url}")
+                data = self.extract_article(art_url)
+                if data:
+                    with open(output_file, 'a', encoding='utf-8') as f:
+                        f.write(json.dumps(data, ensure_ascii=False) + "\n")
+                    found_on_page += 1
+                time.sleep(1)
 
             if found_on_page == 0:
                 print("    [-] Found no unique articles on this page.")
                 break
 
             # Next page check
-            next_page = soup.find('a', class_='next page-numbers')
+            next_page = soup.select_one('.page-nav a i.td-icon-menu-right')
             if not next_page:
-                # Try generic "Next" or "Berikutnya"
-                next_page = soup.find('a', string=re.compile(r'Next|Berikutnya|>', re.I))
+                next_page = soup.select_one('.page-numbers.next')
             
             if not next_page:
                 break
             current_page += 1
 
 if __name__ == "__main__":
-    spider = KatolisitasSpider()
+    spider = HidupSpider()
     categories = [
-        "https://www.katolisitas.org/category/dokumen-gereja/",
-        "https://www.katolisitas.org/category/katekese/katekese-dewasa/"
+        "https://www.hidupkatolik.com/category/kekatolikan/",
+        "https://www.hidupkatolik.com/category/katekese/",
+        "https://www.hidupkatolik.com/category/konsultasi-iman/"
     ]
     for cat in categories:
-        spider.crawl_category(cat, max_pages=10)
+        # Just 2 pages for testing as requested to "help scrape"
+        spider.crawl_category(cat, max_pages=2)
