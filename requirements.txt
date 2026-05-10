@@ -16,3 +16,7 @@ datasets
 pytest
 langchain-ollama
 langchain-groq
+langchain-huggingface
+langchain-community
+faiss-cpu
+sentence-transformers
