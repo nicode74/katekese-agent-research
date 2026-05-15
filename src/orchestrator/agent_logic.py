@@ -4,7 +4,7 @@ import mlflow
 from typing import AsyncGenerator
 from dotenv import load_dotenv
 
-from langchain_ollama import ChatOllama
+from langchain_groq import ChatGroq
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import SupabaseVectorStore
 from supabase.client import Client, create_client
@@ -15,8 +15,8 @@ load_dotenv()
 class HybridOrchestrator:
     def __init__(self):
         # 1. Setup Models
-        print("[*] Initializing Llama 3 (Intent Router) & Gemini 1.5 (Synthesizer)...")
-        self.intent_router = ChatOllama(model="llama3")
+        print("[*] Initializing Llama 3 via Groq (Intent Router) & Gemini 1.5 (Synthesizer)...")
+        self.intent_router = ChatGroq(model="llama3-8b-8192")
         self.synthesizer = ChatGoogleGenerativeAI(
             model="gemini-1.5-pro-latest", 
             temperature=0.2,

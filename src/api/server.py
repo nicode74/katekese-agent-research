@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import uvicorn
 
-from src.orchestrator.hybrid_router import HybridOrchestrator
+from src.orchestrator.agent_logic import HybridOrchestrator
 
 app = FastAPI(
     title="Katekese RAG API",
