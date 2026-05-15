@@ -12,7 +12,7 @@ from langchain_core.output_parsers import StrOutputParser
 # Load environment
 load_dotenv()
 
-class KatekeseAgentOllamaLlama:
+class KatekeseAgentOllamaGemma:
     def __init__(self, index_path: str = "data/index/katekese_faiss_local"):
         self.embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
@@ -27,9 +27,9 @@ class KatekeseAgentOllamaLlama:
             allow_dangerous_deserialization=True
         )
         
-        # Initialize LLM (Local Ollama Llama 3)
+        # Initialize LLM (Local Ollama Gemma 4)
         self.llm = ChatOllama(
-            model="llama3",
+            model="gemma4",
             temperature=0.2
         )
         
@@ -95,8 +95,8 @@ class KatekeseAgentOllamaLlama:
 
 if __name__ == "__main__":
     try:
-        agent = KatekeseAgentOllamaLlama()
-        print("[*] Local Llama 3 Agent Ready. Testing query...")
+        agent = KatekeseAgentOllamaGemma()
+        print("[*] Local Gemma Agent Ready. Testing query...")
         result = agent.ask("Apa kewajiban seorang Uskup dalam memelihara iman umat menurut hukum gereja?")
         print(f"\nA: {result['answer']}")
     except Exception as e:

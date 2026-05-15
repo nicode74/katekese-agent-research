@@ -7,8 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')
 
 from src.agents.agent_gemini import KatekeseAgentGemini
 from src.agents.agent_groq import KatekeseAgentGroq
-from src.agents.agent_local_llama import KatekeseAgentOllamaLlama
-from src.agents.agent_local_qwen import KatekeseAgentOllamaQwen
+from src.agents.agent_local_gemma import KatekeseAgentOllamaGemma
 
 def run_evaluation():
     questions = [
@@ -20,8 +19,7 @@ def run_evaluation():
     agents = [
         ("Gemini 2.0 Flash", KatekeseAgentGemini),
         ("Groq (Llama 3)", KatekeseAgentGroq),
-        ("Ollama (Llama 3)", KatekeseAgentOllamaLlama),
-        ("Ollama (Qwen 0.5b)", KatekeseAgentOllamaQwen)
+        ("Ollama (Gemma 4)", KatekeseAgentOllamaGemma)
     ]
     
     results = []

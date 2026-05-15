@@ -5,14 +5,14 @@ Dokumen ini menjelaskan metodologi dan rasionalisasi di balik pemilihan Large La
 ## 1. What: Model Apa yang Dipilih?
 
 Dalam pengembangan sistem ini, kami mengadopsi pendekatan **Hybrid LLM** dengan mengombinasikan dua model yang memiliki karakteristik berbeda:
-1. **Llama 3 (Local / Open-Source)**: Model *open-weights* dari Meta (khususnya varian 8B) yang dapat dijalankan secara lokal.
+1. **Gemma 4 (Local / Open-Source)**: Model *open-weights* dari Google yang dapat dijalankan secara lokal.
 2. **Gemini API (Cloud API)**: Model *closed-source* mutakhir dari Google yang diakses melalui API.
 
 ## 2. Why: Mengapa Memilih Strategi Hybrid?
 
 Pendekatan hybrid dipilih untuk mengevaluasi dan menyeimbangkan *trade-off* antara privasi, biaya, dan performa komputasi:
 
-- **Alasan Penggunaan Llama 3 (Local):**
+- **Alasan Penggunaan Gemma 4 (Local):**
   - **Privasi Data:** Karena beberapa dokumen Gereja mungkin memiliki hak cipta, pemrosesan secara lokal memastikan tidak ada data yang dikirim ke server pihak ketiga selama *inference*.
   - **Efisiensi Biaya:** Tidak ada biaya per token, sangat menguntungkan untuk eksperimen RAG yang terus-menerus.
   - **Kemandirian Infrastruktur:** Sistem tetap berjalan meskipun tanpa akses internet atau jika API provider sedang *down*.
@@ -24,11 +24,10 @@ Pendekatan hybrid dipilih untuk mengevaluasi dan menyeimbangkan *trade-off* anta
 
 ## 3. How: Bagaimana Implementasinya?
 
-- **Arsitektur Forking:** Aplikasi dibangun menggunakan kerangka kerja `LangChain`. Untuk menjamin integritas eksperimen (A/B testing) dan memastikan *dependency* yang terisolasi, agen RAG dipisahkan menjadi 4 *script* independen:
+- **Arsitektur Forking:** Aplikasi dibangun menggunakan kerangka kerja `LangChain`. Untuk menjamin integritas eksperimen (A/B testing) dan memastikan *dependency* yang terisolasi, agen RAG dipisahkan menjadi 3 *script* independen:
   - `agent_gemini.py`: Menggunakan `ChatGoogleGenerativeAI` (Gemini 2.0 Flash) untuk performa tingkat atas via Cloud.
   - `agent_groq.py`: Menggunakan `ChatGroq` sebagai *proxy* cloud untuk inferensi Llama 3 8B yang berkecepatan tinggi tanpa beban lokal.
-  - `agent_local_llama.py`: Menggunakan `ChatOllama` untuk Llama 3 8B secara *offline*, merepresentasikan *heavy local execution*.
-  - `agent_local_qwen.py`: Menggunakan `ChatOllama` untuk Qwen (misal: Qwen 2.5 0.5b) sebagai perwakilan model *lightweight/low-resource*.
+  - `agent_local_gemma.py`: Menggunakan `ChatOllama` untuk Gemma 4 lokal, mengevaluasi kemampuan varian open-weights lainnya.
 - **Evaluasi Otomatis:** Kami mengimplementasikan sebuah *pipeline* evaluasi (`evaluate_agents.py`) yang mengeksekusi semua agen tersebut secara berurutan menggunakan daftar pertanyaan teologis standar. *Script* ini otomatis mencatat waktu respons (latensi) dan jawaban yang dihasilkan, lalu mengompilasinya ke dalam laporan komparasi berbentuk tabel Markdown (`A_B_Test_Results.md`).
 
 ---

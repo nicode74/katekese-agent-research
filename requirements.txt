@@ -20,3 +20,9 @@ langchain-huggingface
 langchain-community
 faiss-cpu
 sentence-transformers
+fastapi
+uvicorn
+supabase
+mlflow
+dagshub
+langchain-postgres
