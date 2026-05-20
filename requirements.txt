@@ -5,7 +5,8 @@ openpyxl
 python-dotenv
 langchain-core
 langchain-google-genai
-langgraph
+pdfplumber
+langchain-text-splitters
 pydantic
 matplotlib
 seaborn
@@ -25,4 +26,3 @@ uvicorn
 supabase
 mlflow
 dagshub
-langchain-postgres
