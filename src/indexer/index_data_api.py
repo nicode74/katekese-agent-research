@@ -24,9 +24,9 @@ class KatekeseIndexerAPI:
         self.index_path = self.index_dir / "katekese_faiss_api"
         
         # Initialize Google Embeddings (API-based)
-        print("[*] Initializing Google Embeddings (text-embedding-004)...")
+        print("[*] Initializing Google Embeddings (gemini-embedding-001)...")
         self.embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/text-embedding-004"
+            model="models/gemini-embedding-001"
         )
         
         self.text_splitter = RecursiveCharacterTextSplitter(

@@ -20,9 +20,9 @@ class SupabaseIndexer:
         self.docs_dir = Path(docs_dir)
         
         # Initialize Google Embeddings
-        print("[*] Initializing Google text-embedding-004...")
+        print("[*] Initializing Google gemini-embedding-001...")
         self.embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/text-embedding-004"
+            model="models/gemini-embedding-001"
         )
         
         # Text Splitter Config from Plan (Chunk: 800, Overlap: 10%)
@@ -108,7 +108,7 @@ class SupabaseIndexer:
             mlflow.start_run(run_name="Supabase_ETL_Run")
             mlflow.log_param("chunk_size", self.chunk_size)
             mlflow.log_param("chunk_overlap", self.chunk_overlap)
-            mlflow.log_param("embedding_model", "text-embedding-004")
+            mlflow.log_param("embedding_model", "gemini-embedding-001")
         
         try:
             for f in jsonl_files:
