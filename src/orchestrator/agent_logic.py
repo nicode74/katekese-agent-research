@@ -5,9 +5,9 @@ from typing import AsyncGenerator
 from dotenv import load_dotenv
 
 from langchain_groq import ChatGroq
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain_community.vectorstores import SupabaseVectorStore
-from supabase.client import Client, create_client
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 
 load_dotenv()
@@ -22,21 +22,16 @@ class HybridOrchestrator:
             temperature=0.2,
             streaming=True
         )
-        self.embeddings = GoogleGenerativeAIEmbeddings(model="text-embedding-004")
+        self.embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
         
-        # 2. Setup Vector Store
-        supabase_url = os.environ.get("SUPABASE_URL")
-        supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
-        if supabase_url and supabase_key:
-            self.supabase: Client = create_client(supabase_url, supabase_key)
-            self.vector_store = SupabaseVectorStore(
-                embedding=self.embeddings,
-                client=self.supabase,
-                table_name="documents",
-                query_name="match_documents"
-            )
+        # 2. Setup Vector Store (FAISS Local)
+        index_path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "index", "katekese_faiss_local")
+        index_path = os.path.abspath(index_path)
+        if os.path.exists(index_path):
+            self.vector_store = FAISS.load_local(index_path, self.embeddings, allow_dangerous_deserialization=True)
+            print(f"[*] Loaded FAISS index from {index_path}")
         else:
-            print("[WARNING] Supabase credentials missing. RAG will not work.")
+            print(f"[WARNING] FAISS index not found at {index_path}. RAG will not work.")
             self.vector_store = None
 
         # 3. MLOps Setup
