@@ -4,7 +4,7 @@ pandas
 openpyxl
 python-dotenv
 langchain-core
-langchain-google-genai
+langchain-google-genai<=1.0.8
 pdfplumber
 langchain-text-splitters
 pydantic

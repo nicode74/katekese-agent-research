@@ -22,7 +22,7 @@ class HybridOrchestrator:
             temperature=0.2,
             streaming=True
         )
-        self.embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        self.embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
         
         # 2. Setup Vector Store
         supabase_url = os.environ.get("SUPABASE_URL")
