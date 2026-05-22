@@ -22,7 +22,7 @@ class HybridOrchestrator:
             temperature=0.2,
             streaming=True
         )
-        self.embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
+        self.embeddings = GoogleGenerativeAIEmbeddings(model="text-embedding-004")
         
         # 2. Setup Vector Store
         supabase_url = os.environ.get("SUPABASE_URL")
@@ -133,6 +133,10 @@ Output only the label (RAG or DIRECT), nothing else."""
             # Stream from Gemini
             async for chunk in self.synthesizer.astream(messages):
                 yield chunk.content
+
+        except Exception as e:
+            print(f"[!] Engine error: {e}")
+            yield f"\n\n**System Error:** Could not complete the request. Details: {str(e)}"
 
         finally:
             if run_started_here:
