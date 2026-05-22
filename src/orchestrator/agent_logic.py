@@ -16,7 +16,7 @@ class HybridOrchestrator:
         print("[*] Initializing Llama 3 via Groq (Intent Router) & Gemini 1.5 (Synthesizer)...")
         self.intent_router = ChatGroq(model="llama3-8b-8192")
         self.synthesizer = ChatGoogleGenerativeAI(
-            model="gemini-2.5-pro", 
+            model="gemini-2.5-flash", 
             temperature=0.2,
             streaming=True
         )
