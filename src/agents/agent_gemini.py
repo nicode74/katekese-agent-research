@@ -26,9 +26,9 @@ class KatekeseAgentGemini:
             allow_dangerous_deserialization=True
         )
         
-        # Initialize LLM (Gemini 2.0 Flash)
+        # Initialize LLM (Gemini 1.5 Flash)
         self.llm = ChatGoogleGenerativeAI(
-            model="models/gemini-2.0-flash",
+            model="gemini-1.5-flash",
             temperature=0.2, # Lower temperature for factual accuracy
             google_api_key=os.getenv("GOOGLE_API_KEY")
         )

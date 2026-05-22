@@ -27,9 +27,9 @@ class KatekeseAgentGroq:
             allow_dangerous_deserialization=True
         )
         
-        # Initialize LLM (Groq Cloud Llama 3 8B)
+        # Initialize LLM (Groq Cloud Llama 3.3 70B)
         self.llm = ChatGroq(
-            model="llama3-8b-8192",
+            model="llama-3.3-70b-versatile",
             temperature=0.2, 
             api_key=os.getenv("GROQ_API_KEY")
         )

@@ -35,3 +35,12 @@ Dokumen ini mencatat milestone teknis yang telah dicapai dalam pengembangan sist
 1. [ ] **Hybrid Search Implementation:** Penting untuk pencarian spesifik nomor ayat/kanon.
 2. [ ] **Prompt Tuning:** Optimalisasi instruksi agar Agent lebih "rendah hati" jika tidak menemukan jawaban di data.
 3. [ ] **UI Integration:** Membuat bot sederhana (Telegram/CLI) untuk pengujian oleh tim internal.
+
+## 🚨 Urgent Technical Fixes (Identified 2026-05-22)
+Berdasarkan hasil pengujian dan evaluasi terbaru:
+- [ ] **Environment Repair:** Virtual environment lama (`.venv`, `venv`) rusak (broken symlinks). Perlu standarisasi menggunakan `venv_rag` atau pembuatan ulang secara permanen.
+- [ ] **Dependency Update:** Python 3.14 memerlukan `protobuf>=5.0.0` (v7.35.0 teruji berhasil) untuk menghindari error metaclass. Perlu update `requirements.txt`.
+- [ ] **Model Maintenance:** Update permanen `agent_groq.py` karena model `llama3-8b` telah decommissioned (sudah di-patch sementara ke `llama-3.3-70b-versatile`).
+- [ ] **API Quota Management:** Implementasi retry logic dengan exponential backoff pada `index_data_api.py` dan `agent_gemini.py` untuk menangani limitasi Free Tier Google AI Studio (ResourceExhausted 429).
+- [ ] **Missing Credentials:** Konfigurasi Supabase di `.env` masih kosong, menghalangi penggunaan remote vector search di `server.py`.
+- [ ] **Ollama Setup:** Konfigurasi server Ollama lokal agar agent berbasis `Gemma` dapat dievaluasi secara konsisten.

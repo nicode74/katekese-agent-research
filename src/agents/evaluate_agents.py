@@ -18,8 +18,8 @@ def run_evaluation():
     
     agents = [
         ("Gemini 2.0 Flash", KatekeseAgentGemini),
-        ("Groq (Llama 3)", KatekeseAgentGroq),
-        ("Ollama (Gemma 4)", KatekeseAgentOllamaGemma)
+        ("Groq (Llama 3.3 70B)", KatekeseAgentGroq),
+        # ("Ollama (Gemma 4)", KatekeseAgentOllamaGemma)
     ]
     
     results = []
@@ -33,6 +33,10 @@ def run_evaluation():
             agent = agent_class()
             
             for q_idx, q in enumerate(questions):
+                if q_idx > 0:
+                    print("     [ ] Cooling down for 15s (API safety)...")
+                    time.sleep(15)
+                
                 print(f"  -> Q{q_idx+1}: {q}")
                 start_time = time.time()
                 try:

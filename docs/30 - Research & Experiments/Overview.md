@@ -3,6 +3,7 @@
 Folder ini digunakan untuk mencatat hasil uji coba model, prompt, dan evaluasi sistem RAG.
 
 ## 🔬 Eksperimen Aktif
+- **[2026-05-22] Agent A/B Test**: Perbandingan performa antara [[A_B_Test_Results|Gemini 1.5 Flash dan Llama 3.3 70B]].
 - **[2026-05-04] LLM Selection Strategy**: Dokumentasi pemilihan strategi [[LLM_Selection|Hybrid LLM (Llama 3 & Gemini)]].
 - **[2026-05-04] Bias & Ethics Framework**: Kerangka pengujian [[Bias_Evaluation|Red Teaming dan Evaluasi Bias]].
 - **[2026-04-25] Embedding Benchmark**: Membandingkan akurasi pencarian antara Gemini Embedding dan Multilingual-E5.
