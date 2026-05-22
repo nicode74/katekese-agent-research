@@ -23,6 +23,6 @@ faiss-cpu
 sentence-transformers
 fastapi
 uvicorn
-supabase==2.3.4
+
 mlflow
 dagshub

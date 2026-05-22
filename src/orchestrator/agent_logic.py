@@ -6,8 +6,6 @@ from dotenv import load_dotenv
 
 from langchain_groq import ChatGroq
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain_community.vectorstores import SupabaseVectorStore
-from supabase.client import Client, create_client
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 
 load_dotenv()
@@ -25,20 +23,12 @@ class HybridOrchestrator:
         self.embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-2")
         
         # 2. Setup Vector Store
-        supabase_url = os.environ.get("SUPABASE_URL")
-        supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
-        if supabase_url and supabase_key:
-            self.supabase: Client = create_client(supabase_url, supabase_key)
-            self.vector_store = SupabaseVectorStore(
-                embedding=self.embeddings,
-                client=self.supabase,
-                table_name="documents",
-                query_name="match_documents"
-            )
-            print("[*] Successfully connected to Supabase Vector Store")
+        self.supabase_url = os.environ.get("SUPABASE_URL")
+        self.supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
+        if self.supabase_url and self.supabase_key:
+            print("[*] Successfully configured Supabase via REST API")
         else:
             print("[WARNING] Supabase credentials missing. RAG will not work.")
-            self.vector_store = None
 
         # 3. MLOps Setup
         self.mlflow_uri = os.environ.get("MLFLOW_TRACKING_URI")
@@ -71,18 +61,41 @@ Output only the label (RAG or DIRECT), nothing else."""
 
     async def retrieve_context(self, query: str, k: int = 5) -> str:
         """Retrieve context from Supabase Vector Store and log latency."""
-        if not self.vector_store:
+        if not self.supabase_url or not self.supabase_key:
             return ""
         
         start_time = time.time()
-        docs = self.vector_store.similarity_search(query, k=k)
+        
+        # Embed the query
+        query_embedding = self.embeddings.embed_query(query)
+        
+        # Call Supabase RPC via REST
+        import requests
+        url = f"{self.supabase_url.rstrip('/')}/rest/v1/rpc/match_documents"
+        headers = {
+            "apikey": self.supabase_key,
+            "Authorization": f"Bearer {self.supabase_key}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "query_embedding": query_embedding,
+            "match_count": k,
+            "filter": {}
+        }
+        response = requests.post(url, headers=headers, json=payload)
+        
         retrieval_latency = time.time() - start_time
         
         # Log metric to MLflow if a run is active
         if self.mlflow_uri and mlflow.active_run():
             mlflow.log_metric("retrieval_latency", retrieval_latency)
             
-        context = "\n\n".join([f"Source: {d.metadata.get('source', 'Unknown')}\n{d.page_content}" for d in docs])
+        if response.status_code != 200:
+            print(f"[!] Supabase RPC Error: {response.text}")
+            return ""
+            
+        docs = response.json()
+        context = "\n\n".join([f"Source: {d.get('metadata', {}).get('source', 'Unknown')}\n{d.get('content', '')}" for d in docs])
         return context
 
     async def stream_response(self, query: str, history: list = None, mode: str = "short") -> AsyncGenerator[str, None]:
