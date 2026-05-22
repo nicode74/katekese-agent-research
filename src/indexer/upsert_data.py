@@ -93,10 +93,19 @@ class SupabaseIndexer:
         
         loop = asyncio.get_event_loop()
         
+        from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+        
+        @retry(
+            wait=wait_exponential(multiplier=2, min=10, max=60), 
+            stop=stop_after_attempt(10),
+            before_sleep=lambda retry_state: print(f"  [!] Rate limited, retrying in {retry_state.next_action.sleep}s...")
+        )
+        def _add_docs_with_retry(batch):
+            vector_store.add_documents(batch)
+            
         for i in range(0, len(documents), batch_size):
             batch = documents[i:i + batch_size]
-            # Use run_in_executor to not block the async event loop with sync requests
-            await loop.run_in_executor(None, vector_store.add_documents, batch)
+            await loop.run_in_executor(None, _add_docs_with_retry, batch)
             print(f"  [>] Upserted batch {i//batch_size + 1}/{total_batches}")
 
     def run_pipeline(self):
