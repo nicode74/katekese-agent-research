@@ -2,20 +2,15 @@ import os
 from typing import List, Dict, Any
 from dotenv import load_dotenv
 
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 
 # Load environment
 load_dotenv()
 
 class KatekeseAgentGemini:
-    def __init__(self, index_path: str = "data/index/katekese_faiss_local"):
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    def __init__(self, index_path: str = "data/index/katekese_faiss_api"):
+        self.embeddings = GoogleGenerativeAIEmbeddings(
+            model="models/text-embedding-004"
         )
         
         if not os.path.exists(index_path):
