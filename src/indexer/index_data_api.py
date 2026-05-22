@@ -68,14 +68,17 @@ class KatekeseIndexerAPI:
         print(f"    Loaded {count} entries from {file_path.name} -> {len(documents)} chunks.")
         return documents
 
-    def update_index(self, batch_size: int = 100):
-        """Only index NEW files found in data/final and docs/. Using smaller batch size for API."""
+    def update_index(self, batch_size: int = 20):
+        """Only index a SMALL SUBSET of files for evaluation purposes. Saves after every batch."""
         indexed_files = self.get_indexed_files()
         
-        jsonl_files = list(self.data_dir.glob("*.jsonl"))
+        target_files = ["katekismus_final.jsonl", "pdf_Seri-Dokumen-Gerejawi-PATRIS-CORDE_final.jsonl"]
+        
+        jsonl_files = [self.data_dir / f for f in target_files if (self.data_dir / f).exists()]
         new_jsonl = [f for f in jsonl_files if f.name not in indexed_files]
         
-        md_files = [f for f in self.docs_dir.rglob("*.md") if ".obsidian" not in str(f)]
+        # Limit MD files
+        md_files = [f for f in self.docs_dir.rglob("*.md") if ".obsidian" not in str(f)][:2]
         new_md = [f for f in md_files if str(f) not in indexed_files]
         
         if not new_jsonl and not new_md:
@@ -86,7 +89,7 @@ class KatekeseIndexerAPI:
         
         all_new_docs = []
         for f in new_jsonl:
-            all_new_docs.extend(self.load_jsonl_file(f))
+            all_new_docs.extend(self.load_jsonl_file(f, limit=100)) # LIMIT entries per file
             indexed_files.add(f.name)
             
         for f in new_md:
@@ -112,20 +115,19 @@ class KatekeseIndexerAPI:
             vector_store = FAISS.load_local(str(self.index_path), self.embeddings, allow_dangerous_deserialization=True)
             start_idx = 0
         else:
-            # Create fresh with the first batch
             first_batch = all_new_docs[:batch_size]
             vector_store = FAISS.from_documents(first_batch, self.embeddings)
             start_idx = batch_size
-            print(f"  [>] Indexed first batch (1-{min(batch_size, len(all_new_docs))})")
+            vector_store.save_local(str(self.index_path))
+            print(f"  [>] Indexed and SAVED first batch (1-{min(batch_size, len(all_new_docs))})")
 
-        # Add remaining in batches
         for i in range(start_idx, len(all_new_docs), batch_size):
             batch = all_new_docs[i:i + batch_size]
             vector_store.add_documents(batch)
-            print(f"  [>] Indexed batch {i//batch_size + 1} ({i+1}-{min(i+batch_size, len(all_new_docs))})")
-            time.sleep(1) # Rate limiting safety
+            vector_store.save_local(str(self.index_path))
+            print(f"  [>] Indexed and SAVED batch {i//batch_size + 1} ({i+1}-{min(i+batch_size, len(all_new_docs))})")
+            time.sleep(5) # Aggressive rate limiting
 
-        vector_store.save_local(str(self.index_path))
         self.save_indexed_files(indexed_files)
         print(f"[*] API-based index update complete. Index saved at {self.index_path}")
 
