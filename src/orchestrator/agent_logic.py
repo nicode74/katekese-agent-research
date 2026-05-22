@@ -8,7 +8,7 @@ from langchain_groq import ChatGroq
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import SupabaseVectorStore
 from supabase.client import Client, create_client
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 
 load_dotenv()
 
@@ -84,13 +84,14 @@ Output only the label (RAG or DIRECT), nothing else."""
         context = "\n\n".join([f"Source: {d.metadata.get('source', 'Unknown')}\n{d.page_content}" for d in docs])
         return context
 
-    async def stream_response(self, query: str) -> AsyncGenerator[str, None]:
+    async def stream_response(self, query: str, history: list = None, mode: str = "short") -> AsyncGenerator[str, None]:
         """Full pipeline: route -> retrieve -> synthesize (stream)."""
         run_started_here = False
         if self.mlflow_uri and not mlflow.active_run():
             mlflow.start_run(run_name="Hybrid_RAG_Query")
             mlflow.log_param("model", "gemini-1.5-pro-latest")
             mlflow.log_param("intent_router", "llama3")
+            mlflow.log_param("mode", mode)
             run_started_here = True
 
         try:
@@ -106,15 +107,28 @@ Output only the label (RAG or DIRECT), nothing else."""
 
             # 3. Synthesize Response
             system_prompt = "You are a helpful, respectful, and highly knowledgeable AI assistant specializing in Catholic Theology. "
+            if mode == "detailed":
+                system_prompt += "Provide a comprehensive, highly detailed response and make sure to include citations to the provided sources if applicable. "
+            else:
+                system_prompt += "Provide a concise and to-the-point response. "
+
             if intent == "RAG":
                 system_prompt += f"\n\nUse the following retrieved context to answer the user's question accurately. If the answer is not in the context, say you don't know based on the provided documents.\n\nContext:\n{context}"
             else:
-                system_prompt += "\n\nAnswer the user's query concisely."
+                system_prompt += "\n\nAnswer the user's query."
 
-            messages = [
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=query)
-            ]
+            messages = [SystemMessage(content=system_prompt)]
+            
+            if history:
+                for msg in history:
+                    role = msg.get("role", "")
+                    content = msg.get("content", "")
+                    if role == "user":
+                        messages.append(HumanMessage(content=content))
+                    elif role == "assistant":
+                        messages.append(AIMessage(content=content))
+
+            messages.append(HumanMessage(content=query))
 
             # Stream from Gemini
             async for chunk in self.synthesizer.astream(messages):
