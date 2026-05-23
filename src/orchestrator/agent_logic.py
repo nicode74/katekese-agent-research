@@ -23,7 +23,7 @@ class HybridOrchestrator:
         )
         from langchain_google_genai import GoogleGenerativeAIEmbeddings
         self.embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/embedding-001"
+            model="models/gemini-embedding-001"
         )
         
         # 2. Setup Vector Store

@@ -20,7 +20,7 @@ def upload():
         return
 
     print("Initializing Google Gemini Embeddings...")
-    embeddings_model = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    embeddings_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 
     print("Loading chunks for batched upload...")
     data_dir = Path(__file__).parent.parent.parent / "data/final"
@@ -84,8 +84,8 @@ def upload():
                     retries -= 1
                     time.sleep(2)
             
-            # Sleep 1 second to avoid hitting rate limits (1500 per day, but also RPM limits)
-            time.sleep(1)
+            # Sleep 2.5 seconds to avoid hitting rate limits (100 RPM limit)
+            time.sleep(2.5)
         except Exception as e:
             print(f"Embedding error: {e}")
             time.sleep(5)
