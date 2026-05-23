@@ -44,3 +44,14 @@ Berdasarkan hasil pengujian dan evaluasi terbaru:
 - [ ] **API Quota Management:** Implementasi retry logic dengan exponential backoff pada `index_data_api.py` dan `agent_gemini.py` untuk menangani limitasi Free Tier Google AI Studio (ResourceExhausted 429).
 - [ ] **Missing Credentials:** Konfigurasi Supabase di `.env` masih kosong, menghalangi penggunaan remote vector search di `server.py`.
 - [ ] **Ollama Setup:** Konfigurasi server Ollama lokal agar agent berbasis `Gemma` dapat dievaluasi secara konsisten.
+
+## 🚨 API Constraint Discovery & Rollback (Identified 2026-05-23)
+**Finding:**
+During the attempt to bypass the cross-lingual embedding degradation (documented in `Cross_Lingual_Embedding_Degradation.md`), the architecture was temporarily migrated to `GoogleGenerativeAIEmbeddings` using `gemini-embedding-001` (3072 dimensions). 
+While this mathematically resolved the cross-lingual constraints and required 0MB of local RAM, a critical cloud limitation was discovered: Google's Free Tier strictly limits `embedContent` API requests to 1,000 strings per day.
+
+**Impact:**
+Because the dataset consists of 131,532 strings, it would mathematically take 131 days to complete the ingestion using the Free Tier, effectively blocking the use of this API for bulk processing.
+
+**Resolution:**
+The system was officially rolled back to the `all-MiniLM-L6-v2` local embedding model. The cross-lingual degradation is now accepted as a documented, scientific constraint of the project's free-tier infrastructure.
