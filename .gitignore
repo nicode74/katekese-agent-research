@@ -24,6 +24,9 @@ wheels/
 # Virtual Environment
 venv/
 ENV/
+env311/
+bin/micromamba
+micromamba.tar.bz2
 
 # Environment Variables
 .env
