@@ -21,8 +21,9 @@ class HybridOrchestrator:
             temperature=0.2,
             streaming=True
         )
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
+        from langchain_google_genai import GoogleGenerativeAIEmbeddings
+        self.embeddings = GoogleGenerativeAIEmbeddings(
+            model="models/embedding-001"
         )
         
         # 2. Setup Vector Store
