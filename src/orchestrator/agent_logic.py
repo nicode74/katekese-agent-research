@@ -22,7 +22,7 @@ class HybridOrchestrator:
             streaming=True
         )
         self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-distilroberta-v1"
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
         
         # 2. Setup Vector Store
