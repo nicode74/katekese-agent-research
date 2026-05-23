@@ -60,19 +60,22 @@ async def health_check():
 @app.get("/upload")
 async def trigger_upload():
     try:
-        import subprocess
         import threading
+        from src.indexer.upload_in_memory import upload_with_embeddings
         
+        if not orchestrator or not orchestrator.embeddings:
+            return {"status": "error", "message": "Embeddings model not initialized!"}
+            
         def run_upload():
             try:
-                print("Starting background upload on Railway...")
-                subprocess.run(["python", "src/indexer/upload_local_hf.py"], check=True)
+                print("Starting background in-memory upload on Railway...")
+                upload_with_embeddings(orchestrator.embeddings)
                 print("Background upload finished!")
             except Exception as e:
                 print(f"Background upload failed: {e}")
                 
         threading.Thread(target=run_upload).start()
-        return {"status": "success", "message": "HF Upload started in background on Railway!"}
+        return {"status": "success", "message": "In-memory HF Upload started in background on Railway!"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
