@@ -13,8 +13,8 @@ load_dotenv()
 class HybridOrchestrator:
     def __init__(self):
         # 1. Setup Models
-        print("[*] Initializing Llama 3 via Groq (Intent Router) & Gemini 1.5 (Synthesizer)...")
-        self.intent_router = ChatGroq(model="llama3-8b-8192")
+        print("[*] Initializing Llama 3.1 via Groq (Intent Router) & Gemini 2.5 (Synthesizer)...")
+        self.intent_router = ChatGroq(model="llama-3.1-8b-instant")
         self.synthesizer = ChatGoogleGenerativeAI(
             model="gemini-2.5-flash", 
             temperature=0.2,
