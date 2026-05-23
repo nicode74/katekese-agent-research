@@ -23,7 +23,7 @@ if not all([SUPABASE_URL, SUPABASE_KEY]):
 
 def upload():
     print("Loading local embedding model...")
-    model = SentenceTransformer('all-MiniLM-L6-v2')
+    model = SentenceTransformer('all-distilroberta-v1')
     
     data_dir = Path(__file__).parent.parent.parent / "data/final"
     files = list(data_dir.glob("*.jsonl"))
