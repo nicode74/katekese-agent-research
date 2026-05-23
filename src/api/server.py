@@ -60,12 +60,19 @@ async def health_check():
 @app.get("/upload")
 async def trigger_upload():
     try:
-        from src.indexer.upsert_data import SupabaseIndexer
-        indexer = SupabaseIndexer()
-        # run_pipeline is sync, but we can run it in a thread or just block since it's a one-off
+        import subprocess
         import threading
-        threading.Thread(target=indexer.run_pipeline).start()
-        return {"status": "success", "message": "Upload started in background!"}
+        
+        def run_upload():
+            try:
+                print("Starting background upload on Railway...")
+                subprocess.run(["python", "src/indexer/upload_local_hf.py"], check=True)
+                print("Background upload finished!")
+            except Exception as e:
+                print(f"Background upload failed: {e}")
+                
+        threading.Thread(target=run_upload).start()
+        return {"status": "success", "message": "HF Upload started in background on Railway!"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
