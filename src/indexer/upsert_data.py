@@ -7,8 +7,6 @@ from dotenv import load_dotenv
 import mlflow
 
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_community.vectorstores import SupabaseVectorStore
-from supabase.client import Client, create_client
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
@@ -20,9 +18,9 @@ class SupabaseIndexer:
         self.docs_dir = Path(docs_dir)
         
         # Initialize Google Embeddings
-        print("[*] Initializing Google gemini-embedding-001...")
+        print("[*] Initializing Google gemini-embedding-2...")
         self.embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/gemini-embedding-001"
+            model="models/gemini-embedding-2"
         )
         
         # Text Splitter Config from Plan (Chunk: 800, Overlap: 10%)
@@ -35,13 +33,10 @@ class SupabaseIndexer:
         )
 
         # Initialize Supabase
-        supabase_url = os.environ.get("SUPABASE_URL")
-        supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
-        if not supabase_url or not supabase_key:
-            print("[WARNING] SUPABASE_URL or SUPABASE_SERVICE_KEY not found in env. Ensure these are set before running.")
-            self.supabase = None
-        else:
-            self.supabase: Client = create_client(supabase_url, supabase_key)
+        self.supabase_url = os.environ.get("SUPABASE_URL")
+        self.supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
+        if not self.supabase_url or not self.supabase_key:
+            print("[WARNING] SUPABASE_URL or SUPABASE_SERVICE_KEY not found in env.")
         
         # Configure MLflow Dagshub
         self.mlflow_uri = os.environ.get("MLFLOW_TRACKING_URI")
@@ -77,23 +72,16 @@ class SupabaseIndexer:
         return documents
 
     async def async_batch_upsert(self, documents: List[Document], batch_size: int = 100):
-        if not self.supabase:
-            print("[ERROR] Cannot upsert: Supabase client is not initialized.")
+        if not self.supabase_url:
+            print("[ERROR] Cannot upsert: Supabase credentials missing.")
             return
 
-        vector_store = SupabaseVectorStore(
-            embedding=self.embeddings,
-            client=self.supabase,
-            table_name="documents",
-            query_name="match_documents"
-        )
-        
         total_batches = (len(documents) + batch_size - 1) // batch_size
         print(f"[*] Starting async batch upsert of {len(documents)} chunks in {total_batches} batches.")
         
         loop = asyncio.get_event_loop()
-        
-        from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+        from tenacity import retry, wait_exponential, stop_after_attempt
+        import requests
         
         @retry(
             wait=wait_exponential(multiplier=2, min=10, max=60), 
@@ -101,7 +89,30 @@ class SupabaseIndexer:
             before_sleep=lambda retry_state: print(f"  [!] Rate limited, retrying in {retry_state.next_action.sleep}s...")
         )
         def _add_docs_with_retry(batch):
-            vector_store.add_documents(batch)
+            # 1. Embed documents
+            texts = [doc.page_content for doc in batch]
+            embeddings = self.embeddings.embed_documents(texts)
+            
+            # 2. Prepare payload
+            payload = []
+            for doc, emb in zip(batch, embeddings):
+                payload.append({
+                    "content": doc.page_content,
+                    "metadata": doc.metadata,
+                    "embedding": emb
+                })
+                
+            # 3. Insert via REST API
+            url = f"{self.supabase_url.rstrip('/')}/rest/v1/documents"
+            headers = {
+                "apikey": self.supabase_key,
+                "Authorization": f"Bearer {self.supabase_key}",
+                "Content-Type": "application/json",
+                "Prefer": "return=minimal"
+            }
+            response = requests.post(url, headers=headers, json=payload)
+            if response.status_code not in (200, 201, 204):
+                raise Exception(f"Failed to upsert: {response.text}")
             
         for i in range(0, len(documents), batch_size):
             batch = documents[i:i + batch_size]

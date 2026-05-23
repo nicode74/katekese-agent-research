@@ -57,5 +57,17 @@ async def chat_endpoint(request: ChatRequest):
 async def health_check():
     return {"status": "healthy"}
 
+@app.get("/upload")
+async def trigger_upload():
+    try:
+        from src.indexer.upsert_data import SupabaseIndexer
+        indexer = SupabaseIndexer()
+        # run_pipeline is sync, but we can run it in a thread or just block since it's a one-off
+        import threading
+        threading.Thread(target=indexer.run_pipeline).start()
+        return {"status": "success", "message": "Upload started in background!"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 if __name__ == "__main__":
     uvicorn.run("src.api.server:app", host="0.0.0.0", port=8000, reload=True)
