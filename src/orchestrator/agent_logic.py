@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from langchain_groq import ChatGroq
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 
 load_dotenv()
@@ -21,10 +21,8 @@ class HybridOrchestrator:
             temperature=0.2,
             streaming=True
         )
-        hf_token = os.environ.get("HF_TOKEN")
-        self.embeddings = HuggingFaceInferenceAPIEmbeddings(
-            api_key=hf_token,
-            model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        self.embeddings = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
         
         # 2. Setup Vector Store
