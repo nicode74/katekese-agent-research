@@ -1,19 +1,25 @@
 import os
-from dotenv import load_dotenv
-from supabase.client import Client, create_client
+import urllib.request
+import json
+from pathlib import Path
 
-load_dotenv()
+env_path = Path(".env")
+if env_path.exists():
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        if "=" in line and not line.startswith("#"):
+            k, v = line.split("=", 1)
+            os.environ[k] = v.strip()
 
-supabase_url = os.environ.get("SUPABASE_URL")
-supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
+url = os.environ.get("SUPABASE_URL").rstrip('/') + "/rest/v1/documents?select=id&limit=10"
+key = os.environ.get("SUPABASE_SERVICE_KEY")
 
-if not supabase_url or not supabase_key:
-    print("No Supabase URL or Key")
-    exit(1)
-
-supabase = create_client(supabase_url, supabase_key)
+req = urllib.request.Request(url, headers={
+    "apikey": key,
+    "Authorization": f"Bearer {key}"
+})
 try:
-    response = supabase.table("documents").select("id", count="exact").limit(1).execute()
-    print("Documents count:", response.count)
+    with urllib.request.urlopen(req) as resp:
+        data = json.loads(resp.read().decode('utf-8'))
+        print(f"Number of documents in Supabase (limit 10): {len(data)}")
 except Exception as e:
-    print("Error querying supabase:", e)
+    print(f"Error: {e}")
