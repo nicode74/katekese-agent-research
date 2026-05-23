@@ -8,28 +8,24 @@ As documented in the Research & Experiments phase (`docs/30 - Research & Experim
 
 These constraints forced the adoption of the `all-MiniLM-L6-v2` (80MB) embedding model. Because it is an English-only model, it causes **Cross-Lingual Degradation** when querying the Indonesian corpus (e.g., Alkitab TB), resulting in empty context returns for native Indonesian queries.
 
-## 2. Strategic Roadmap for Full Multilingual Support
-To achieve flawless semantic retrieval across both English (Encyclicals) and Indonesian (Alkitab) documents, the architecture must break one of the current physical constraints. The following two paths have been identified for future implementation:
+## 2. Post-UTS Production Architecture Options (For Local Church Deployment)
+To make this system fully usable for the local church, it must perfectly understand Bahasa Indonesia without crashing the Railway server or hitting daily API limits. Based on our empirical testing, the following three paths are the most viable for production:
 
-### Option A: The Environment Optimization Path (Recommended for Free Tier)
-This path focuses on resolving software incompatibilities to leverage external zero-RAM embedding APIs.
-- **Action**: Downgrade the project's virtual environment from Python 3.14 Alpha to a stable release (Python 3.12 or 3.11).
-- **Result**: This resolves the Protobuf metadata crash.
-- **Implementation**: 
-  1. Rebuild the `venv`.
-  2. Implement `GoogleGenerativeAIEmbeddings` (specifically `models/embedding-001`).
-  3. Batch the embedding ingestion script (100 chunks per request) to stay safely beneath the 1,500 Requests-Per-Day quota.
-- **Benefits**: Costs $0, fully bypasses the local ISP download throttle, completely eliminates Railway RAM usage for vector generation, and provides state-of-the-art multilingual understanding.
+### Option A: The "Alternative Free API" Path (Easiest)
+Google Gemini restricted us with a 1,000 string/day limit, but other API providers offer superior free tiers optimized for multilingual data.
+- **Action**: Swap the embedding engine from local `all-MiniLM-L6-v2` to **Voyage AI** (`voyage-multilingual-2`) or **Cohere** (`embed-multilingual-v3.0`).
+- **Benefits**: Voyage AI provides 50 Million tokens per month for free (the entire Alkitab is ~2M tokens). This costs $0/month, uses 0MB of Railway RAM, and provides state-of-the-art Indonesian semantic understanding.
 
-### Option B: The Hardware Scaling Path (Production/Enterprise)
-This path focuses on vertical scaling to support massive, locally-hosted multilingual open-source models, removing dependency on external APIs like Google Gemini.
-- **Action**: Upgrade the Railway deployment tier (e.g., Hobby Plan or Pro Plan) to expand available RAM from 500MB to 8GB+.
-- **Result**: Sufficient memory headroom to load advanced XLM-RoBERTa architectures.
-- **Implementation**:
-  1. Replace `all-MiniLM-L6-v2` with `paraphrase-multilingual-MiniLM-L12-v2` (471MB) or `multilingual-e5-large` (1.5GB).
-  2. Perform embedding logic natively on the Railway server.
-- **Benefits**: Zero rate limits, zero API dependencies, highest possible data privacy, and mathematically perfect semantic alignment for the Indonesian text corpus.
+### Option B: The "$4/Month Dedicated Server" Path (Most Robust)
+The core architectural bottleneck is Railway's 500MB RAM limit, which prevents the loading of large open-source multilingual models.
+- **Action**: Migrate the deployment from Railway Free Tier to a basic Cloud VPS (e.g., Hetzner or DigitalOcean) costing ~$4/month for 4GB of RAM.
+- **Benefits**: 4GB of RAM is more than enough to natively run the massive `paraphrase-multilingual-MiniLM-L12-v2` offline embedding model. This creates a 100% sovereign system with zero rate limits, no API dependencies, and perfect data privacy.
+
+### Option C: The "Hybrid Keyword Search" Path (The Engineering Route)
+If the goal is to maintain $0 monthly costs and keep the lightweight English `L6` model, the system can bypass the cross-lingual vector search problem by using traditional text matching.
+- **Action**: Modify the orchestration logic (`agent_logic.py`) to perform a "Hybrid Search" utilizing Supabase's native PostgreSQL Full-Text Search (BM25).
+- **Benefits**: When a user queries "Apa isi Kitab Wahyu?", the vector similarity search will fail, but the BM25 keyword search will instantly locate the exact Indonesian text in the database. This requires zero extra RAM and costs $0.
 
 ## 3. Next Steps (Action Items)
-- **Immediate Task**: Complete the UTS Midterm Report utilizing the current English-optimized `L6` model to demonstrate understanding of system constraints and vocabulary alignment.
-- **Post-UTS Goal**: Execute **Option A** by migrating the project to Python 3.12 and transitioning the vector store fully to Google Gemini Embeddings.
+- **Immediate Task**: Complete the UTS Midterm Report utilizing the current English-optimized `L6` model to demonstrate a deep understanding of Data Mining constraints, cloud limitations, and vocabulary alignment.
+- **Post-UTS Goal**: Present the 3 Production Options to the church leadership to decide whether to adopt an Alternative Free API (Option A) or invest in a small $4/month server (Option B) for the final deployment.
