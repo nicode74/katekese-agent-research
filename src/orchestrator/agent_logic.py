@@ -1,3 +1,22 @@
+import socket
+# Apply IPv4 monkey patch to bypass DNS timeout
+orig_getaddrinfo = socket.getaddrinfo
+def ipv4_only_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    return orig_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+socket.getaddrinfo = ipv4_only_getaddrinfo
+
+# Apply Pydantic unpickling patch
+from langchain_core.documents import Document
+def __setstate__(self, state):
+    if "__dict__" in state:
+        self.__dict__.update(state["__dict__"])
+    else:
+        self.__dict__.update(state)
+    for k in ["__pydantic_extra__", "__pydantic_fields_set__", "__pydantic_private__"]:
+        if k in state:
+            object.__setattr__(self, k, state[k])
+Document.__setstate__ = __setstate__
+
 import os
 import time
 import mlflow
@@ -14,8 +33,8 @@ load_dotenv()
 class HybridOrchestrator:
     def __init__(self):
         # 1. Setup Models
-        print("[*] Initializing Llama 3.1 via Groq (Intent Router) & Gemini 2.5 (Synthesizer)...")
-        self.intent_router = ChatGroq(model="llama-3.1-8b-instant")
+        print("[*] Initializing Llama 3.3 via Groq (Intent Router) & Gemini 2.0 (Synthesizer)...")
+        self.intent_router = ChatGroq(model="llama-3.3-70b-versatile")
         self.synthesizer = ChatGoogleGenerativeAI(
             model="gemini-2.5-flash", 
             temperature=0.2,

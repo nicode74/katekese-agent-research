@@ -1,9 +1,28 @@
+import socket
+# Apply IPv4 monkey patch to bypass DNS timeout
+orig_getaddrinfo = socket.getaddrinfo
+def ipv4_only_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    return orig_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+socket.getaddrinfo = ipv4_only_getaddrinfo
+
+# Apply Pydantic unpickling patch
+from langchain_core.documents import Document
+def __setstate__(self, state):
+    if "__dict__" in state:
+        self.__dict__.update(state["__dict__"])
+    else:
+        self.__dict__.update(state)
+    for k in ["__pydantic_extra__", "__pydantic_fields_set__", "__pydantic_private__"]:
+        if k in state:
+            object.__setattr__(self, k, state[k])
+Document.__setstate__ = __setstate__
+
 import os
 from typing import List, Dict, Any
 from dotenv import load_dotenv
 
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_groq import ChatGroq
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
@@ -13,9 +32,9 @@ from langchain_core.output_parsers import StrOutputParser
 load_dotenv()
 
 class KatekeseAgentGroq:
-    def __init__(self, index_path: str = "data/index/katekese_faiss_api"):
-        self.embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/gemini-embedding-001"
+    def __init__(self, index_path: str = "data/index/katekese_faiss_local"):
+        self.embeddings = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
         
         if not os.path.exists(index_path):

@@ -26,3 +26,4 @@ uvicorn
 
 mlflow
 dagshub
+protobuf>=5.0.0

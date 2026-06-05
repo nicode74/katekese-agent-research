@@ -1,3 +1,22 @@
+import socket
+# Apply IPv4 monkey patch to bypass DNS timeout
+orig_getaddrinfo = socket.getaddrinfo
+def ipv4_only_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    return orig_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+socket.getaddrinfo = ipv4_only_getaddrinfo
+
+# Apply Pydantic unpickling patch
+from langchain_core.documents import Document
+def __setstate__(self, state):
+    if "__dict__" in state:
+        self.__dict__.update(state["__dict__"])
+    else:
+        self.__dict__.update(state)
+    for k in ["__pydantic_extra__", "__pydantic_fields_set__", "__pydantic_private__"]:
+        if k in state:
+            object.__setattr__(self, k, state[k])
+Document.__setstate__ = __setstate__
+
 import time
 import os
 import sys
@@ -17,7 +36,7 @@ def run_evaluation():
     ]
     
     agents = [
-        ("Gemini 2.0 Flash", KatekeseAgentGemini),
+        ("Gemini 2.5 Flash", KatekeseAgentGemini),
         ("Groq (Llama 3.3 70B)", KatekeseAgentGroq),
         # ("Ollama (Gemma 4)", KatekeseAgentOllamaGemma)
     ]
