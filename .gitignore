@@ -23,6 +23,8 @@ wheels/
 
 # Virtual Environment
 venv/
+.venv/
+*_venv/
 ENV/
 env311/
 bin/micromamba
