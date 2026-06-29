@@ -93,13 +93,14 @@ Output only the label (RAG or DIRECT), nothing else."""
         
         # Call Supabase RPC via REST
         import requests
-        url = f"{self.supabase_url.rstrip('/')}/rest/v1/rpc/match_documents"
+        url = f"{self.supabase_url.rstrip('/')}/rest/v1/rpc/match_documents_hybrid"
         headers = {
             "apikey": self.supabase_key,
             "Authorization": f"Bearer {self.supabase_key}",
             "Content-Type": "application/json"
         }
         payload = {
+            "query_text": query,
             "query_embedding": query_embedding,
             "match_count": k,
             "filter": {}
