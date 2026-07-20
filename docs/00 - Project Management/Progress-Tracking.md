@@ -2,7 +2,26 @@
 
 Dokumen ini mencatat milestone teknis yang telah dicapai dalam pengembangan sistem RAG Katekese.
 
-## 🏁 Milestone Terkini (April 2026)
+---
+
+## 🚀 Milestone Terkini (Juli 2026): Agentic AI & Web Integration (Ecclesia-RAG v2.0)
+
+### ✅ Phase 5: Agentic Routing, Autonomous Workflows & Website Integration
+- [x] **Multi-Intent Agentic Router:** Implementasi Intent Classifier (`Llama-3.3-70b` via Groq) untuk memilah kueri secara cerdas ke dalam `DOCTRINE_RAG`, `PARISH_INFO`, dan `DIRECT`.
+- [x] **Live Parish Knowledge Retrieval:** Integrasi basis data paroki Supabase (`jadwal`, `pengumuman`, `renungan`) untuk menjawab pertanyaan operasional gereja secara real-time.
+- [x] **Self-RAG & Hallucination Guard:** Lapisan verifikasi mandiri untuk mengevaluasi fidelitas jawaban terhadap dokumen rujukan dan mencegah halusinasi sitasi.
+- [x] **Autonomous Daily Reflection Agent:** Agen otonom (`daily_reflection_agent.py`) yang membuat renungan harian Katolik berbasis Injil menggunakan Gemini 2.5 Flash dan menyimpan otomatis ke Supabase.
+- [x] **Real-Time Vector Auto-Sync Webhook:** `AutoIngestionService` (`auto_ingest.py`) untuk chunking, embedding (`all-MiniLM-L6-v2`), dan indexing warta/dokumen baru secara otomatis.
+- [x] **Parish Query Analytics Agent:** Agen pengelompokan pertanyaan umat (`analytics_agent.py`) yang menyajikan insight dan rekomendasi aksi untuk dewan paroki.
+- [x] **Next.js 16 Web Integration (`church-website`):**
+  - **SSE Proxy API Route:** (`/api/chat`) Menyalurkan streaming teks dan event metadata dari backend FastAPI.
+  - **Floating Glassmorphic Chat Widget:** Komponen UI interaktif dengan kartu rujukan sitasi dan toggle mode (Ringkas vs Mendalam).
+  - **Dedicated AI Research Portal:** Halaman penuh (`/katekese-ai`) untuk riset doktrin teologi Katolik secara mendalam.
+  - **Admin AI Control Dashboard:** Panel manajemen (`/admin/ai-agent`) untuk menjalankan job agen otonom dan memantau analitik.
+
+---
+
+## 🏁 Milestone Sebelumnya (April - Mei 2026)
 
 ### ✅ Phase 1: Data Acquisition (ETL)
 - [x] **Bible Dataset:** Penyatuan Alkitab TB & Deuterokanonika (29.4k baris).
@@ -16,34 +35,18 @@ Dokumen ini mencatat milestone teknis yang telah dicapai dalam pengembangan sist
 - [x] **Smart Titles:** Implementasi logic untuk menghasilkan judul otomatis (misal: "Kejadian 1:1", "KHK Kanon 5").
 
 ### ✅ Phase 3: Indexing & Vector Store
-- [x] **Local Embeddings:** Implementasi HuggingFace `paraphrase-multilingual-MiniLM-L12-v2` (Bypass rate limit & zero cost).
-- [x] **Vector DB:** Pembuatan index FAISS lokal yang mendukung pencarian semantik multibahasa.
-- [x] **Obsidian Awareness:** Indexer secara otomatis menyerap file `.md` di folder `docs/` sebagai konteks tambahan, memungkinkan Agent "sadar" akan catatan riset sendiri.
+- [x] **Local Embeddings:** Implementasi HuggingFace `sentence-transformers/all-MiniLM-L6-v2` (Bypass rate limit & zero cost).
+- [x] **Vector DB & Hybrid Search:** Penyimpanan basis data pgvector Supabase dengan dukungan fungsi RPC `match_documents_hybrid`.
+- [x] **Obsidian Awareness:** Indexer secara otomatis menyerap file `.md` di folder `docs/` sebagai konteks tambahan.
 - [x] **Incremental Indexing:** Script `index_data.py` hanya memproses file baru atau yang berubah.
 
-### 🏗️ Phase 4: Agent Orchestration (WIP)
-- [x] **Multi-Provider Architecture:** Pemisahan *Agent* menjadi 4 skrip independen (`agent_gemini.py`, `agent_groq.py`, `agent_local_llama.py`, `agent_local_qwen.py`) untuk A/B testing yang bersih.
-- [x] **Citation Logic:** Sistem sitasi otomatis `[1]`, `[2]` untuk menjamin akurasi rujukan teologis.
-- [x] **LLM Reasoner:** Integrasi LangChain untuk **Gemini 2.0 Flash**, **Groq (Llama 3)**, dan **Ollama (Llama 3 & Qwen)**.
-- [x] **Automated Evaluation:** Pembuatan skrip `evaluate_agents.py` untuk mengukur latensi dan membandingkan *output* antar model secara otomatis ke dalam format Markdown.
-- [ ] **Hybrid Search:** Menggabungkan BM25 (keyword) dan Vector Search (semantic) untuk presisi rujukan ayat/kanon.
-- [ ] **Deep Evaluation:** Implementasi framework RAGAS untuk mengukur metrik *faithfulness* dan *relevancy* secara komprehensif.
+### ✅ Phase 4: Agent Orchestration & Evaluation
+- [x] **Multi-Provider Architecture:** Pemisahan *Agent* menjadi skrip independen untuk A/B testing (`agent_gemini.py`, `agent_groq.py`, `agent_local_gemma.py`).
+- [x] **Citation Logic:** Sistem sitasi otomatis untuk menjamin akurasi rujukan teologis.
+- [x] **LLM Reasoner:** Integrasi LangChain untuk **Gemini 2.5 Flash**, **Groq (Llama 3.3)**, dan model lokal.
+- [x] **Automated Evaluation:** Pembuatan skrip `evaluate_agents.py` untuk mengukur latensi dan membandingkan *output* antar model.
 
 ---
-
-## 🛠️ Pekerjaan Mendatang (Short-term)
-1. [ ] **Hybrid Search Implementation:** Penting untuk pencarian spesifik nomor ayat/kanon.
-2. [ ] **Prompt Tuning:** Optimalisasi instruksi agar Agent lebih "rendah hati" jika tidak menemukan jawaban di data.
-3. [ ] **UI Integration:** Membuat bot sederhana (Telegram/CLI) untuk pengujian oleh tim internal.
-
-## 🚨 Urgent Technical Fixes (Identified 2026-05-22)
-Berdasarkan hasil pengujian dan evaluasi terbaru:
-- [ ] **Environment Repair:** Virtual environment lama (`.venv`, `venv`) rusak (broken symlinks). Perlu standarisasi menggunakan `venv_rag` atau pembuatan ulang secara permanen.
-- [ ] **Dependency Update:** Python 3.14 memerlukan `protobuf>=5.0.0` (v7.35.0 teruji berhasil) untuk menghindari error metaclass. Perlu update `requirements.txt`.
-- [ ] **Model Maintenance:** Update permanen `agent_groq.py` karena model `llama3-8b` telah decommissioned (sudah di-patch sementara ke `llama-3.3-70b-versatile`).
-- [ ] **API Quota Management:** Implementasi retry logic dengan exponential backoff pada `index_data_api.py` dan `agent_gemini.py` untuk menangani limitasi Free Tier Google AI Studio (ResourceExhausted 429).
-- [ ] **Missing Credentials:** Konfigurasi Supabase di `.env` masih kosong, menghalangi penggunaan remote vector search di `server.py`.
-- [ ] **Ollama Setup:** Konfigurasi server Ollama lokal agar agent berbasis `Gemma` dapat dievaluasi secara konsisten.
 
 ## 🚨 API Constraint Discovery & Rollback (Identified 2026-05-23)
 **Finding:**
